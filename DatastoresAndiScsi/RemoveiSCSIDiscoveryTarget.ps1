@@ -4,7 +4,7 @@
 #
 
 # What are the addresses of the targets are we removing? (Can be 1 or more)
-$addressesToRemove = @('10.226.8.49','10.226.8.38')
+$addressesToRemove = @('','')
 
 # Get Credentials
 $viCredential = Get-Credential -Message 'Enter credentials for VMware connection'
