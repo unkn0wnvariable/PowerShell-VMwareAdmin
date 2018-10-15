@@ -3,8 +3,8 @@
 # Updated for PowerCLI 10
 #
 
-# What is the address of the target are we removing?
-$addressToRemove = '10.130.8.203'
+# What are the addresses of the targets are we removing? (Can be 1 or more)
+$addressesToRemove = @('10.226.8.49','10.226.8.38')
 
 # Get Credentials
 $viCredential = Get-Credential -Message 'Enter credentials for VMware connection'
@@ -20,21 +20,23 @@ Connect-VIServer -Server $viServer -Credential $viCredential
 $vmHosts = Get-VMHost -Server $viServer | Sort-Object -Property Name
 
 # Iterate through the hosts removing the iSCSI target where it is present
-foreach($vmHost in $vmHosts){
-    Write-Host -Object ('Removing iSCSI target ' + $addressToRemove + ' from ' + $vmHost + '... ') -NoNewline
-    $vmHostHba = $vmHost | Get-VMHostHba -Type IScsi
-    $targetToRemove = Get-IScsiHbaTarget -IScsiHba $vmHostHba | Where-Object {$_.Address -eq $addressToRemove}
-    if ($targetToRemove) {
-        try {
-            Remove-IScsiHbaTarget -Target $targetToRemove -Confirm:$false -ErrorAction:Stop
-            Write-Host -Object 'Removed OK.' -ForegroundColor Green
+foreach ($vmHost in $vmHosts) {
+    foreach ($addressToRemove in $addressesToRemove) {
+        Write-Host -Object ('Removing iSCSI target ' + $addressToRemove + ' from ' + $vmHost + '... ') -NoNewline
+        $vmHostHba = $vmHost | Get-VMHostHba -Type IScsi
+        $targetToRemove = Get-IScsiHbaTarget -IScsiHba $vmHostHba | Where-Object {$_.Address -eq $addressToRemove}
+        if ($targetToRemove) {
+            try {
+                Remove-IScsiHbaTarget -Target $targetToRemove -Confirm:$false -ErrorAction:Stop
+                Write-Host -Object 'Removed OK.' -ForegroundColor Green
+            }
+            catch {
+                Write-Host -Object 'Failed.' -ForegroundColor Red
+            }
         }
-        catch {
-            Write-Host -Object 'Failed.' -ForegroundColor Red
+        else {
+            Write-Host -Object 'Not configured.' -ForegroundColor Red
         }
-    }
-    else {
-        Write-Host -Object 'Not configured.' -ForegroundColor Red
     }
 }
 
