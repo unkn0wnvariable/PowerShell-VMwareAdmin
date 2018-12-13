@@ -10,7 +10,7 @@ $viCredential = Get-Credential -Message 'Enter credentials for VMware connection
 $viServer = Read-Host -Prompt 'Enter hostname of vSphere server'
 
 # Import the PowerCLI Module and Connect
-Import-Module -Name VMware.PowerCLI -Force
+Import-Module -Name VMware.PowerCLI -Force -DisableNameChecking
 Connect-VIServer -Server $viServer -Credential $viCredential
 
 # Path to create output file
@@ -26,16 +26,13 @@ $outputTable = @()
 foreach ($vm in $vmList) {
     $datastoreName = (Get-View $vm.DatastoreIdList).Name
     $vmProvisionedSpace = [math]::Round($vm.ProvisionedSpaceGB,2)
-    $vmFolder = $vm.Folder
-    $vmNotes = $vm.Notes
-    $vmResourcePool = $vm.ResourcePool
     $outputRow = [pscustomobject]@{
-        'VM Name'=$vm.Name;
-        'Size (GB)'=$vmProvisionedSpace;
-        'Folder'=$vmFolder;
-        'Datastore'=$datastoreName;
-        'Resource Pool'=$vmResourcePool;
-        'Notes'=$vmNotes
+        'VM Name' = $vm.Name;
+        'Size (GB)' = $vmProvisionedSpace;
+        'Folder' = $vm.Folder;
+        'Datastore' = $datastoreName;
+        'Resource Pool' = $vm.ResourcePool;
+        'Notes' = $vm.Notes
     }
     $outputTable += $outputRow
 }
