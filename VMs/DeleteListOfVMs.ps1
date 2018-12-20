@@ -14,19 +14,24 @@ Import-Module -Name VMware.PowerCLI -Force
 Connect-VIServer -Server $viServer -Credential $viCredential
 
 # Path to file containing list of VM's to delete
-$vmsToDeleteFile = 'C:\Temp\VMsToDelete.txt'
+$vmsToDeleteFile = 'C:\Temp\PoweredOffVMs.txt'
 
 # Get list of VMs to be deleted from file
 $vmsToDelete = Get-Content -Path $vmsToDeleteFile
 
 # Check to see if each VM in the list is powered off, if it is then delete it.
 foreach ($VM in $vmsToDelete) {
-    $vmDetails = Get-VM -Name $VM
-    if ($vmDetails.PowerState -eq 'PoweredOff') {
-        $vmDetails | Remove-VM -DeletePermanently -RunAsync -Confirm:$false
+    try {
+        $vmDetails = Get-VM -Name $VM -ErrorAction:Stop
+        if ($vmDetails.PowerState -eq 'PoweredOff') {
+            $vmDetails | Remove-VM -DeletePermanently -RunAsync -Confirm:$false
+        }
+        else {
+            Write-Host -Object ('VM ' + $VM + ' is not powered off.') -ForegroundColor Red
+        }
     }
-    else {
-        Write-Host -Object ('VM ' + $VM + ' is not powered off.') -ForegroundColor Red
+    catch {
+        Write-Host -Object ('VM ' + $VM + ' does not exist.') -ForegroundColor Red
     }
 }
 
